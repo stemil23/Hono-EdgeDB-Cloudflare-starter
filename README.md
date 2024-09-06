@@ -16,8 +16,8 @@ This project uses EdgeDB as the database, Hono as the web framework, and Cloudfl
 
 1. Clone the repository:
    ```
-   git clone [your-repository-url]
-   cd [your-project-directory]
+   git clone https://github.com/stemil23/Hono-EdgeDB-Cloudflare-starter
+
    ```
 
 2. Create a `.dev.vars` file in the project root and add your EdgeDB DSN:
