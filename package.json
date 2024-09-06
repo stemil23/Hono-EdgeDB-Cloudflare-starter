@@ -1,0 +1,17 @@
+{
+  "name": "my-hono-app",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "edgedb": "^1.5.11",
+    "hono": "^4.5.11"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240903.0",
+    "@edgedb/generate": "^0.5.5",
+    "wrangler": "^3.57.2"
+  }
+}
