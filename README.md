@@ -2,10 +2,14 @@
 
 This project uses EdgeDB as the database, Hono as the web framework, and Cloudflare for deployment and edge computing capabilities.
 
+https://hono.dev
+https://docs.edgedb.com/libraries/js
+https://developers.cloudflare.com/workers/
+
 ## Prerequisites
 
 - Node.js
-- EdgeDB
+- EdgeDB 
 - Cloudflare account (for deployment)
 
 ## Setup
