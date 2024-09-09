@@ -16,13 +16,11 @@ export namespace std {
 export namespace cfg {
   export interface ConfigObject extends std.BaseObject {}
   export interface AbstractConfig extends ConfigObject {
-    "extensions": ExtensionConfig[];
     "session_idle_timeout": edgedb.Duration;
     "session_idle_transaction_timeout": edgedb.Duration;
     "query_execution_timeout": edgedb.Duration;
     "listen_port": number;
     "listen_addresses": string[];
-    "auth": Auth[];
     "allow_dml_in_functions"?: boolean | null;
     "allow_bare_ddl"?: AllowBareDDL | null;
     "apply_access_policies"?: boolean | null;
@@ -39,13 +37,15 @@ export namespace cfg {
     "default_statistics_target"?: number | null;
     "force_database_error"?: string | null;
     "_pg_prepared_statement_cache_size": number;
+    "extensions": ExtensionConfig[];
+    "auth": Auth[];
   }
   export type AllowBareDDL = "AlwaysAllow" | "NeverAllow";
   export interface Auth extends ConfigObject {
     "priority": number;
     "user": string[];
-    "method"?: AuthMethod | null;
     "comment"?: string | null;
+    "method"?: AuthMethod | null;
   }
   export interface AuthMethod extends ConfigObject {
     "transports": ConnectionTransport[];
@@ -75,8 +75,12 @@ export namespace cfg {
 }
 export namespace $default {
   export interface Movie extends std.$Object {
-    "actors": Person[];
     "title": string;
+    "actors": Person[];
+  }
+  export interface MovieWithActorsTxt extends std.$Object {
+    "actors"?: string | null;
+    "title"?: string | null;
   }
   export interface Person extends std.$Object {
     "name": string;
@@ -84,7 +88,80 @@ export namespace $default {
   }
 }
 export type Movie = $default.Movie;
+export type MovieWithActorsTxt = $default.MovieWithActorsTxt;
 export type Person = $default.Person;
+export namespace ext {
+  export namespace ai {
+    export interface Model extends std.$Object {}
+    export interface TextGenerationModel extends Model {}
+    export interface AnthropicClaude3HaikuModel extends TextGenerationModel {}
+    export interface AnthropicClaude3OpusModel extends TextGenerationModel {}
+    export interface AnthropicClaude3SonnetModel extends TextGenerationModel {}
+    export interface ProviderConfig extends cfg.ConfigObject {
+      "name": string;
+      "display_name": string;
+      "api_url": string;
+      "client_id"?: string | null;
+      "secret": string;
+      "api_style": ProviderAPIStyle;
+    }
+    export interface AnthropicProviderConfig extends ProviderConfig {
+      "name": string;
+      "display_name": string;
+      "api_url": string;
+      "api_style": ProviderAPIStyle;
+    }
+    export type ChatParticipantRole = "System" | "User" | "Assistant" | "Tool";
+    export interface ChatPrompt extends std.$Object {
+      "name": string;
+      "messages": ChatPromptMessage[];
+    }
+    export interface ChatPromptMessage extends std.$Object {
+      "participant_role": ChatParticipantRole;
+      "participant_name"?: string | null;
+      "content": string;
+    }
+    export interface Config extends cfg.ExtensionConfig {
+      "indexer_naptime": edgedb.Duration;
+      "providers": ProviderConfig[];
+    }
+    export interface CustomProviderConfig extends ProviderConfig {
+      "display_name": string;
+      "api_style": ProviderAPIStyle;
+    }
+    export type DistanceFunction = "Cosine" | "InnerProduct" | "L2";
+    export interface EmbeddingModel extends Model {}
+    export type IndexType = "HNSW";
+    export interface MistralEmbedModel extends EmbeddingModel {}
+    export interface MistralLargeModel extends TextGenerationModel {}
+    export interface MistralMediumModel extends TextGenerationModel {}
+    export interface MistralProviderConfig extends ProviderConfig {
+      "name": string;
+      "display_name": string;
+      "api_url": string;
+      "api_style": ProviderAPIStyle;
+    }
+    export interface MistralSmallModel extends TextGenerationModel {}
+    export interface OpenAIGPT_3_5_TurboModel extends TextGenerationModel {}
+    export interface OpenAIGPT_4_TurboModel extends TextGenerationModel {}
+    export interface OpenAIProviderConfig extends ProviderConfig {
+      "name": string;
+      "display_name": string;
+      "api_url": string;
+      "api_style": ProviderAPIStyle;
+    }
+    export interface OpenAITextEmbedding3LargeModel extends EmbeddingModel {}
+    export interface OpenAITextEmbedding3SmallModel extends EmbeddingModel {}
+    export interface OpenAITextEmbeddingAda002Model extends EmbeddingModel {}
+    export type ProviderAPIStyle = "OpenAI" | "Anthropic";
+  }
+  export namespace pgvector {
+    export interface Config extends cfg.ExtensionConfig {
+      "probes": number;
+      "ef_search": number;
+    }
+  }
+}
 export namespace fts {
   export type ElasticLanguage = "ara" | "bul" | "cat" | "ces" | "ckb" | "dan" | "deu" | "ell" | "eng" | "eus" | "fas" | "fin" | "fra" | "gle" | "glg" | "hin" | "hun" | "hye" | "ind" | "ita" | "lav" | "nld" | "nor" | "por" | "ron" | "rus" | "spa" | "swe" | "tha" | "tur" | "zho" | "edb_Brazilian" | "edb_ChineseJapaneseKorean";
   export type Language = "ara" | "hye" | "eus" | "cat" | "dan" | "nld" | "eng" | "fin" | "fra" | "deu" | "ell" | "hin" | "hun" | "ind" | "gle" | "ita" | "nor" | "por" | "ron" | "rus" | "spa" | "swe" | "tur";
@@ -107,20 +184,20 @@ export namespace schema {
     "is_final": boolean;
   }
   export interface InheritingObject extends SubclassableObject {
+    "inherited_fields"?: string[] | null;
     "bases": InheritingObject[];
     "ancestors": InheritingObject[];
-    "inherited_fields"?: string[] | null;
   }
   export interface AnnotationSubject extends $Object {
     "annotations": Annotation[];
   }
   export interface AccessPolicy extends InheritingObject, AnnotationSubject {
-    "subject": ObjectType;
     "access_kinds": AccessKind[];
     "condition"?: string | null;
     "action": AccessPolicyAction;
     "expr"?: string | null;
     "errmessage"?: string | null;
+    "subject": ObjectType;
   }
   export type AccessPolicyAction = "Allow" | "Deny";
   export interface Alias extends AnnotationSubject {
@@ -138,30 +215,29 @@ export namespace schema {
   export interface PrimitiveType extends Type {}
   export interface CollectionType extends PrimitiveType {}
   export interface Array extends CollectionType {
-    "element_type": Type;
     "dimensions"?: number[] | null;
+    "element_type": Type;
   }
   export interface ArrayExprAlias extends Array {}
   export interface CallableObject extends AnnotationSubject {
+    "return_typemod"?: TypeModifier | null;
     "params": Parameter[];
     "return_type"?: Type | null;
-    "return_typemod"?: TypeModifier | null;
   }
   export type Cardinality = "One" | "Many";
   export interface VolatilitySubject extends $Object {
     "volatility"?: Volatility | null;
   }
   export interface Cast extends AnnotationSubject, VolatilitySubject {
-    "from_type"?: Type | null;
-    "to_type"?: Type | null;
     "allow_implicit"?: boolean | null;
     "allow_assignment"?: boolean | null;
+    "from_type"?: Type | null;
+    "to_type"?: Type | null;
   }
   export interface ConsistencySubject extends InheritingObject, AnnotationSubject {
     "constraints": Constraint[];
   }
   export interface Constraint extends CallableObject, InheritingObject {
-    "params": Parameter[];
     "expr"?: string | null;
     "subjectexpr"?: string | null;
     "finalexpr"?: string | null;
@@ -169,6 +245,7 @@ export namespace schema {
     "delegated"?: boolean | null;
     "except_expr"?: string | null;
     "subject"?: ConsistencySubject | null;
+    "params": Parameter[];
   }
   export interface Delta extends $Object {
     "parents": Delta[];
@@ -184,17 +261,17 @@ export namespace schema {
   }
   export interface FutureBehavior extends $Object {}
   export interface Global extends AnnotationSubject {
-    "target"?: Type | null;
     "required"?: boolean | null;
     "cardinality"?: Cardinality | null;
     "expr"?: string | null;
     "default"?: string | null;
+    "target"?: Type | null;
   }
   export interface Index extends InheritingObject, AnnotationSubject {
     "expr"?: string | null;
     "except_expr"?: string | null;
-    "params": Parameter[];
     "kwargs"?: {name: string, expr: string}[] | null;
+    "params": Parameter[];
   }
   export interface Pointer extends ConsistencySubject, AnnotationSubject {
     "cardinality"?: Cardinality | null;
@@ -208,20 +285,20 @@ export namespace schema {
     "rewrites": Rewrite[];
   }
   export interface Source extends $Object {
-    "indexes": Index[];
     "pointers": Pointer[];
+    "indexes": Index[];
   }
   export interface Link extends Pointer, Source {
-    "target"?: ObjectType | null;
-    "properties": Property[];
     "on_target_delete"?: TargetDeleteAction | null;
     "on_source_delete"?: SourceDeleteAction | null;
+    "target"?: ObjectType | null;
+    "properties": Property[];
   }
   export interface Migration extends AnnotationSubject, $Object {
-    "parents": Migration[];
     "script": string;
     "message"?: string | null;
     "generated_by"?: MigrationGeneratedBy | null;
+    "parents": Migration[];
   }
   export type MigrationGeneratedBy = "DevMode" | "DDLStatement";
   export interface Module extends AnnotationSubject, $Object {}
@@ -230,27 +307,27 @@ export namespace schema {
   }
   export interface MultiRangeExprAlias extends MultiRange {}
   export interface ObjectType extends Source, ConsistencySubject, InheritingObject, Type, AnnotationSubject {
-    "union_of": ObjectType[];
-    "intersection_of": ObjectType[];
-    "access_policies": AccessPolicy[];
-    "triggers": Trigger[];
     "compound_type": boolean;
     "is_compound_type": boolean;
+    "union_of": ObjectType[];
+    "intersection_of": ObjectType[];
     "links": Link[];
     "properties": Property[];
+    "access_policies": AccessPolicy[];
+    "triggers": Trigger[];
   }
   export interface Operator extends CallableObject, VolatilitySubject {
     "operator_kind"?: OperatorKind | null;
-    "abstract"?: boolean | null;
     "is_abstract"?: boolean | null;
+    "abstract"?: boolean | null;
   }
   export type OperatorKind = "Infix" | "Postfix" | "Prefix" | "Ternary";
   export interface Parameter extends $Object {
-    "type": Type;
     "typemod": TypeModifier;
     "kind": ParameterKind;
     "num": number;
     "default"?: string | null;
+    "type": Type;
   }
   export type ParameterKind = "VariadicParam" | "NamedOnlyParam" | "PositionalParam";
   export interface Property extends Pointer {}
@@ -260,9 +337,9 @@ export namespace schema {
   }
   export interface RangeExprAlias extends Range {}
   export interface Rewrite extends InheritingObject, AnnotationSubject {
-    "subject": Pointer;
     "kind": TriggerKind;
     "expr": string;
+    "subject": Pointer;
   }
   export type RewriteKind = "Update" | "Insert";
   export interface ScalarType extends PrimitiveType, ConsistencySubject, AnnotationSubject {
@@ -273,12 +350,12 @@ export namespace schema {
   export type SourceDeleteAction = "DeleteTarget" | "Allow" | "DeleteTargetIfOrphan";
   export type TargetDeleteAction = "Restrict" | "DeleteSource" | "Allow" | "DeferredRestrict";
   export interface Trigger extends InheritingObject, AnnotationSubject {
-    "subject": ObjectType;
     "timing": TriggerTiming;
     "kinds": TriggerKind[];
     "scope": TriggerScope;
     "expr"?: string | null;
     "condition"?: string | null;
+    "subject": ObjectType;
   }
   export type TriggerKind = "Update" | "Delete" | "Insert";
   export type TriggerScope = "All" | "Each";
@@ -288,8 +365,8 @@ export namespace schema {
     "element_types": TupleElement[];
   }
   export interface TupleElement extends std.BaseObject {
-    "type": Type;
     "name"?: string | null;
+    "type": Type;
   }
   export interface TupleExprAlias extends Tuple {}
   export type TypeModifier = "SetOfType" | "OptionalType" | "SingletonType";
@@ -347,7 +424,42 @@ export interface types {
   };
   "default": {
     "Movie": $default.Movie;
+    "MovieWithActorsTxt": $default.MovieWithActorsTxt;
     "Person": $default.Person;
+  };
+  "ext": {
+    "ai": {
+      "Model": ext.ai.Model;
+      "TextGenerationModel": ext.ai.TextGenerationModel;
+      "AnthropicClaude3HaikuModel": ext.ai.AnthropicClaude3HaikuModel;
+      "AnthropicClaude3OpusModel": ext.ai.AnthropicClaude3OpusModel;
+      "AnthropicClaude3SonnetModel": ext.ai.AnthropicClaude3SonnetModel;
+      "ProviderConfig": ext.ai.ProviderConfig;
+      "AnthropicProviderConfig": ext.ai.AnthropicProviderConfig;
+      "ChatParticipantRole": ext.ai.ChatParticipantRole;
+      "ChatPrompt": ext.ai.ChatPrompt;
+      "ChatPromptMessage": ext.ai.ChatPromptMessage;
+      "Config": ext.ai.Config;
+      "CustomProviderConfig": ext.ai.CustomProviderConfig;
+      "DistanceFunction": ext.ai.DistanceFunction;
+      "EmbeddingModel": ext.ai.EmbeddingModel;
+      "IndexType": ext.ai.IndexType;
+      "MistralEmbedModel": ext.ai.MistralEmbedModel;
+      "MistralLargeModel": ext.ai.MistralLargeModel;
+      "MistralMediumModel": ext.ai.MistralMediumModel;
+      "MistralProviderConfig": ext.ai.MistralProviderConfig;
+      "MistralSmallModel": ext.ai.MistralSmallModel;
+      "OpenAIGPT_3_5_TurboModel": ext.ai.OpenAIGPT_3_5_TurboModel;
+      "OpenAIGPT_4_TurboModel": ext.ai.OpenAIGPT_4_TurboModel;
+      "OpenAIProviderConfig": ext.ai.OpenAIProviderConfig;
+      "OpenAITextEmbedding3LargeModel": ext.ai.OpenAITextEmbedding3LargeModel;
+      "OpenAITextEmbedding3SmallModel": ext.ai.OpenAITextEmbedding3SmallModel;
+      "OpenAITextEmbeddingAda002Model": ext.ai.OpenAITextEmbeddingAda002Model;
+      "ProviderAPIStyle": ext.ai.ProviderAPIStyle;
+    };
+    "pgvector": {
+      "Config": ext.pgvector.Config;
+    };
   };
   "fts": {
     "ElasticLanguage": fts.ElasticLanguage;

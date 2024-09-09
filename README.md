@@ -61,3 +61,9 @@ To deploy the project:
 ```
 npm run deploy
 ```
+
+npx @edgedb/generate edgeql-js
+npx @edgedb/generate queries
+npx @edgedb/generate interfaces
+
+

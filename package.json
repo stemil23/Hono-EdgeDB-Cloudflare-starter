@@ -6,12 +6,13 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
+    "@edgedb/ai": "^0.1.0-alpha.2",
     "edgedb": "^1.5.11",
     "hono": "^4.5.11"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240903.0",
     "@edgedb/generate": "^0.5.5",
-    "wrangler": "^3.57.2"
+    "wrangler": "^3.75.0"
   }
 }

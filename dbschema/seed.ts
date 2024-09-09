@@ -12,6 +12,7 @@ async function main() {
       await client.execute(`
         delete Movie;
         delete Person;
+        delete MovieWithActorsTxt;
       `);
       console.log("Successfully deleted all existing actors and movies.");
     } catch (error) {
@@ -51,6 +52,7 @@ async function main() {
     insert Person { name := "Samuel L. Jackson" };
     insert Person { name := "Uma Thurman" };
     insert Person { name := "John Travolta" };
+    insert Person { name := "Hugo Weaving" };
     
     insert Movie {
       title := <str>$title1,
@@ -110,7 +112,8 @@ async function main() {
       actors := (
         select Person filter .name in {
           "Keanu Reeves",
-          "Carrie-Anne Moss"
+          "Carrie-Anne Moss",
+          "Hugo Weaving"
         }
       )
     };
@@ -269,6 +272,7 @@ async function main() {
     title18: "Toy Story",
     title19: "Mr. & Mrs. Smith"
   });
+  console.log("Successfully inserted new records.");
 }
 
 main();

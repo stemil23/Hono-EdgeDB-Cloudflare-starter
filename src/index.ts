@@ -3,7 +3,8 @@ import { homeRoute } from './routes/home';
 import { getAddMovieForm, addMovie, deleteMovie, editMovie, getEditMovieForm, getMovies, getMoviesList } from './routes/movies';
 import { getPersonsList, getEditPersonForm, editPerson, deletePerson } from './routes/persons';
 import { edgedb } from '@db/imports';
-
+import { askAboutMoviesOrActors } from './routes/aiDemo';
+import { serveAiDemo } from './routes/aiDemo';
 
 // At the top of the file, define your Env type
 type Env = {
@@ -109,5 +110,19 @@ app.post('/edit-person/:id', async (c: Context<{ Bindings: Env }>) => editPerson
  * @returns {Promise<void>}
  */
 app.post('/delete-person/:id', async (c: Context<{ Bindings: Env }>) => deletePerson(c, app));
+
+/**
+ * Ask questions about movies or actors using EdgeDB AI
+ * @param {Context<{ Bindings: Env }>} c - Hono context
+ * @returns {Promise<Response>}
+ */
+app.post('/ai/ask', async (c: Context<{ Bindings: Env }>) => askAboutMoviesOrActors(c));
+
+/**
+ * Serve AI demo page
+ * @param {Context<{ Bindings: Env }>} c - Hono context
+ * @returns {Promise<Response>}
+ */
+app.get('/ai-demo', async (c: Context<{ Bindings: Env }>) => serveAiDemo(c));
 
 export default app;
