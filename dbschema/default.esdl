@@ -21,6 +21,12 @@ module default {
         )
       }
     );
+
+    # Trigger to delete from MovieWithActorsText after a Movie delete
+    trigger mwa_delete after delete for each do (
+      DELETE MovieWithActorsTxt
+      FILTER .title = __old__.title
+    );
   }
 
   # Person type with exclusive name property and computed link to movies
